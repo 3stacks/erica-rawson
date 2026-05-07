@@ -1,10 +1,9 @@
 FROM node:22-alpine AS base
-RUN npm install -g npm@latest
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
 FROM base AS builder
@@ -15,7 +14,6 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--no-deprecation
 
-# Need a dummy DATABASE_URL for the build step (Payload validates at build time)
 ARG DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 ARG PAYLOAD_SECRET=build-secret-not-used-at-runtime
 ENV DATABASE_URL=${DATABASE_URL}
@@ -45,4 +43,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 
-CMD HOSTNAME="0.0.0.0" node server.js
+CMD ["node", "server.js"]
