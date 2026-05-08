@@ -1,9 +1,9 @@
 FROM node:22-alpine AS base
+RUN apk add --no-cache libc6-compat
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 
 FROM base AS builder
@@ -13,11 +13,8 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--no-deprecation
-
-ARG DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
-ARG PAYLOAD_SECRET=build-secret-not-used-at-runtime
-ENV DATABASE_URL=${DATABASE_URL}
-ENV PAYLOAD_SECRET=${PAYLOAD_SECRET}
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV PAYLOAD_SECRET=build-time-placeholder
 
 RUN npm run build
 
@@ -26,21 +23,19 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
-RUN mkdir .next
-RUN mkdir -p public/media
-RUN chown -R nextjs:nodejs .next public/media
+RUN mkdir -p .next public/media \
+ && chown -R nextjs:nodejs .next public/media
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
-
 EXPOSE 3000
-ENV PORT=3000
 
 CMD ["node", "server.js"]

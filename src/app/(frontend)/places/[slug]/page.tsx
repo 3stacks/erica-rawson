@@ -9,18 +9,24 @@ import RichText from '@/components/RichText'
 import { Media } from '@/components/Media'
 import { generateMeta } from '@/utilities/generateMeta'
 
-export async function generateStaticParams() {
-  const payload = await getPayload({ config: configPromise })
-  const places = await payload.find({
-    collection: 'places',
-    draft: false,
-    limit: 1000,
-    overrideAccess: false,
-    pagination: false,
-    select: { slug: true },
-  })
+export const revalidate = 600
 
-  return places.docs.map(({ slug }) => ({ slug }))
+export async function generateStaticParams() {
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const places = await payload.find({
+      collection: 'places',
+      draft: false,
+      limit: 1000,
+      overrideAccess: false,
+      pagination: false,
+      select: { slug: true },
+    })
+
+    return places.docs.map(({ slug }) => ({ slug }))
+  } catch {
+    return []
+  }
 }
 
 type Args = {

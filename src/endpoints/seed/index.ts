@@ -26,7 +26,14 @@ const italic = (t: string) => text(t, 2)
 const h2 = (t: string) => ({ type: 'heading', tag: 'h2', children: [text(t)] })
 const h3 = (t: string) => ({ type: 'heading', tag: 'h3', children: [text(t)] })
 const richText = (children: any[]) => ({
-  root: { type: 'root', children, direction: 'ltr', format: '', indent: 0, version: 1 },
+  root: {
+    type: 'root' as const,
+    children,
+    direction: 'ltr' as const,
+    format: '' as const,
+    indent: 0,
+    version: 1,
+  },
 })
 
 export const seed = async ({
@@ -42,9 +49,11 @@ export const seed = async ({
 
   await Promise.all(
     globals.map((global) =>
+      // `as never` because the union of global data types narrows `data` to
+      // its intersection. Both 'header' and 'footer' have `navItems` at runtime.
       payload.updateGlobal({
         slug: global,
-        data: { navItems: [] },
+        data: { navItems: [] } as never,
         depth: 0,
         context: { disableRevalidate: true },
       }),

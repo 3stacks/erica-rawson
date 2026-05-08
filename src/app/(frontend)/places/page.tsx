@@ -6,6 +6,8 @@ import React from 'react'
 import { Media } from '@/components/Media'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Places - Erica and Rawson',
   description: 'Shops, attractions, dining, activities and services in Erica and Rawson',
